@@ -1,0 +1,33 @@
+-- Token format:
+-- [ip=<client_ip>~][st=<starttime>~]exp=<expires>~acl=<url-enconded acl>[~id=<url-enconded session>]~data=<url-enconded data>~hmac=<hash>
+-- where
+-- <client_ip> IP address of the client this token is valid for (optional)
+-- <starttime> - time_t value of the start time this token is valid
+-- <expires> - time_t value of the end time this token is valid
+-- <acl> - path or wildcard pattern matching the paths this token applies to
+-- <data> - any custom data
+-- <session> - opaque session data; ignored but hashed
+-- <hash> - hmac_sha256_hex of the token data using $secret
+--
+-- Sample token can be generated as follows:
+-- ./akamai_token_v2.pl -k "$secret" -a "$acl" -w $expire_period -p "$data" -i "$client_ip"
+--
+-- The hash is computed from the token string with the "~hmac=<hash>" part removed
+-- E.g.
+-- hmac_sha256_hex("$secret", "exp=$expires~acl=$acl~data=$data")
+--
+-- Note, $secret is hex-encoded secret string from ta.secrets, which is decoded before applying to hmac
+-- However, ta.secrets values can store 2 secrets separated by ';'. If this separator is present
+-- then the first part is the hex secret and the second part is the salt (an arbitrary text string).
+-- The salt can be specified using -S option of akamai_token_v2.
+-- Internally it's appended to the token (+ "~salt=<salt>") before hashing but not included in the
+-- resulting token output.
+--
+--
+-- Sample URL with a token:
+-- https://example.com/exp=1549358680~acl=%2f966e4d9d256b532570e8ac836813f910%2f* \
+--  ~data=cid%3d1164431022%2ciid%3d7307e4fb-bbcd-4c31-bce3-d00ca4356697%2csid%3ddash \
+--        -c97b720c-034a-430d-b358-ebb0b21afd2f%2csiteId%3dviu%2cslotId%3dandroidapp \
+--        %2cclientId%3dtest-client-id-33%2cn%3d1549354792757%2ch%3d7E4D69DFF582BD1A0704E02AB163A7C5 \
+--  ~hmac=ed15a3bf3520af68e8fcc95f9893a6f237e3d497208a3feb7e7c23fb80d1b3ef \
+--  /966e4d9d256b532570e8ac836813f910/vp63207_V20180514200854/hlsc_whe2931.m3u8
