@@ -10,7 +10,7 @@
 -- <hash> - hmac_sha256_hex of the token data using $secret
 --
 -- Sample token can be generated as follows:
--- ./akamai_token_v2.pl -k "$secret" -a "$acl" -w $expire_period -p "$data" -i "$client_ip"
+-- ./token-script-exe.pl -k "$secret" -a "$acl" -w $expire_period -p "$data" -i "$client_ip"
 --
 -- The hash is computed from the token string with the "~hmac=<hash>" part removed
 -- E.g.
