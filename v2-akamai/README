@@ -1,0 +1,260 @@
+Akamai EdgeAuth Token 2.0.7
+
+LICENSE
+
+Copyright (c) 2010-2014, Akamai Technologies, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Akamai Technologies nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL AKAMAI TECHNOLOGIES BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+OVERVIEW
+
+The EdgeAuth Token 2.0.7  package is designed to help you incorporate version
+2.0.7 Edge Authorization / distributed authentication tokens into your site.
+
+An EdgeAuth Token version 2.0.7 contains a few required and a number of
+optional fields which come together to provide a solution for both
+message-passing and to communicate authorization. These fields are combined
+into a token string and then run through a few possible HMAC algorithms (MD5,
+SHA1 & SHA256) along with a shared key to produce a token.  This token is then
+included in a link that should be token protected, in a manner defined by the
+customer configuration.
+
+
+CONTENTS
+
+This archive contains the following folders, each of which contains further
+information on making use of the individual libraries:
+
+c
+    A C implementation suitable for inclusion in C/C++ projects. Contains one
+    file that can be compiled as a command-line application.
+
+c#
+    A c# implementation that contains a console application and a test application showing programmatic usage.
+
+erlang
+    An erlang implementation containing several files that can be used as a
+    command-line application.
+
+go
+    A golang implementation that can be used as a command-line application
+    and a web server with a /token REST API call.
+
+java
+    A java implementation. Contains an Ant-buildable java implementation that
+    can be used as both a library and a command-line application.
+
+perl
+    A perl implementation that contains a command-line application.
+
+php
+    A php implementation demonstrating how to generate tokens.
+
+python
+    A python implementation. Contains one file that can be used as either a
+    library or a command-line application.
+
+ruby
+    A ruby implementation that contains a command-line application.
+
+
+USAGE
+
+Where command line usage is possible, all of the samples use a similar set of
+options.  At the moment, token_type does not have any impact on the generation
+of a token.  This is a planned future improvement to preset some of the
+parameters for a specific token type.
+
+The examples below will use the python implementation but all of the samples
+support a similar set of options.
+
+
+$ python python/akamai_token_v2/akamai_token_v2.py --help
+Usage: python akamai_token_v2.py [options]
+ie.
+python akamai_token_v2.py
+
+Options:
+  --version             show program's version number and exit
+  -h, --help            show this help message and exit
+  -t TOKEN_TYPE, --token_type=TOKEN_TYPE
+                        Select a preset: (Not Supported Yet) [2.0, 2.0.2 ,PV, Debug]
+  -n TOKEN_NAME, --token_name=TOKEN_NAME
+                        Parameter name for the new token. [Default:hdnts]
+  -i IP_ADDRESS, --ip=IP_ADDRESS
+                        IP Address to restrict this token to.
+  -s START_TIME, --start_time=START_TIME
+                        What is the start time. (Use now for the current time)
+  -e END_TIME, --end_time=END_TIME
+                        When does this token expire? --end_time overrides
+                        --window [Used for:URL or COOKIE]
+  -w WINDOW_SECONDS, --window=WINDOW_SECONDS
+                        How long is this token valid for?
+  -u URL, --url=URL     URL path. [Used for:URL]
+  -a ACCESS_LIST, --acl=ACCESS_LIST
+                        Access control list delimited by ! [ie. /*]
+  -k KEY, --key=KEY     Secret required to generate the token.
+  -p PAYLOAD, --payload=PAYLOAD
+                        Additional text added to the calculated digest.
+  -A ALGORITHM, --algo=ALGORITHM
+                        Algorithm to use to generate the token. (sha1, sha256,
+                        or md5) [Default:sha256]
+  -S SALT, --salt=SALT  Additional data validated by the token but NOT
+                        included in the token body.
+  -I SESSION_ID, --session_id=SESSION_ID
+                        The session identifier for single use tokens or other
+                        advanced cases.
+  -d FIELD_DELIMITER, --field_delimiter=FIELD_DELIMITER
+                        Character used to delimit token body fields.
+                        [Default:~]
+  -D ACL_DELIMITER, --acl_delimiter=ACL_DELIMITER
+                        Character used to delimit acl fields. [Default:!]
+  -x, --escape_early    Causes strings to be url encoded before being used.
+                        (legacy 2.0 behavior)
+  -X, --escape_early_upper
+                        Causes strings to be url encoded before being used.
+                        (legacy 2.0 behavior)
+  -v, --verbose         
+
+
+PARAMETERS
+
+Required parameters:
+
+	* end_time      ONLY REQUIRED WHEN NOT USING WINDOW. A long containing the
+                    time (in seconds-since-epoch format) when the token is no
+                    longer valid.
+
+    * window        ONLY REQUIRED WHEN NOT USING END_TIME.  The number of
+                    seconds that the token will be valid for.  end_time is
+                    calculated based on the current time when the token is
+                    generated.
+
+	* acl           ONLY REQUIRED WHEN NOT USING URL. The ACL field can include
+                    wildcards and makes the token valid only for urls that fit
+                    into one of the provided specifications.
+
+	* url           ONLY REQUIRED WHEN NOT USING ACL. The URL field is included
+                    only in the HMAC calculation and does not appear in the
+                    token string.  Locks the token to a single url.  This
+                    parameter was kept for backward compatibility but you
+                    should be using acl instead since any change to the host
+                    name or modifying the path within your delivery
+                    configuration will cause the token to fail.
+
+	* key           Used only in the calculation of the HMAC.  This value is
+                    shared between the edge configuration and the system
+                    producing the token and should not be exposed to the end
+                    user.
+
+Generated:
+
+	* hmac          This value is calculated and included in the final token.
+
+Optional:
+    * start_time    A long containing the time (in seconds-since-epoch format)
+                    when the token should become valid.  You can also use the
+                    string "now" to include the current time in the token.
+                    If this parameter is not present, there will be no start
+                    time included in the generated token.
+
+	* salt          A string which is not included in the token string itself
+                    but is included in the token HMAC calculation.  This can
+                    often be used to verify some aspect of the user-agent that
+                    is present when the agent uses the token.
+
+	* payload       A string which is opaque and is carried in the token
+
+	* session_id    A string which denotes some kind of session.  Can be used
+                    as a second data field.
+
+	* ip            Enforces that the token be restricted to a specific IP
+                    address
+
+    * token_name    A string that is pre-pended to the generated token.
+
+EXAMPLES
+
+* Generate a token with a password and a 5 minute timeout:
+
+$ python python/akamai_token_v2/akamai_token_v2.py --window=300 --key=aa11bb22 --acl=/*
+hdnts=exp=1370627409~acl=/*~hmac=cdbd42d9d1a70ae344c7b5e85c812567ff892d16edd75860304e53251f497554
+
+
+* Generate a token that expires at a specific time:
+
+$ python python/akamai_token_v2/akamai_token_v2.py --end_time=1370627409 --key=aa11bb22 --acl=/*
+hdnts=exp=1370627409~acl=/*~hmac=cdbd42d9d1a70ae344c7b5e85c812567ff892d16edd75860304e53251f497554
+
+
+* Generate a token that includes both a start and end time:
+
+$ python python/akamai_token_v2/akamai_token_v2.py --start_time=now --end_time=1370627409 --key=aa11bb22 --acl=/*
+hdnts=st=1370627194~exp=1370627409~acl=/*~hmac=6a10b3f602ffde88c02cd1b89665bfdfdc0fc84c3cf7049752931ad732654fab
+
+
+* Generate a token that may be used to pass a user id:
+
+$ python python/akamai_token_v2/akamai_token_v2.py --window=300 --session_id=my_user_id --key=aa11bb22 --acl=/*
+hdnts=exp=1370627602~acl=/*~id=my_user_id~hmac=3476c71b1025dfb1b2d3d5dba9c8c7cbe5ec5828676d1083cfa56a0a4c272bd6
+
+
+* Generate a token that allows access to a specific set of urls with wildcards:
+
+$ python python/akamai_token_v2/akamai_token_v2.py --window=300 --key=aa11bb22 --acl='/z/group1/*!/z/group2/*!/z/group3/*'
+hdnts=exp=1370627784~acl=/z/group1/*!/z/group2/*!/z/group3/*~hmac=1e9dd24b27d08ffab02f1a5cec81d81a773f12255ad209d34ce87698107a1123
+
+
+* Generate a token that has the default acl delimiter as part of a valid path
+
+$ python python/akamai_token_v2/akamai_token_v2.py --window=300 --key=aa11bb22 --acl='/z/group1!*#/z/group2!*#/z/group3!*' --acl_delimiter='#'
+hdnts=exp=1370627915~acl=/z/group1!*#/z/group2!*#/z/group3!*~hmac=5eb8583414956ff0d8d1c037ef62c7b9aaf206b690923642b0033792043ac384
+
+
+* Show more details about what the token generator is using for parameters:
+
+$ python python/akamai_token_v2/akamai_token_v2.py --window=300 --key=aa11bb22 --acl='/z/group1!*#/z/group2!*#/z/group3!*' --acl_delimiter='#' -v
+
+Akamai Token Generation Parameters
+Token Type      : 
+Token Name      : hdnts
+Start Time      : 
+Window(seconds) : 300
+End Time        : 1370627963
+IP              : 
+URL             : 
+ACL             : /z/group1!*#/z/group2!*#/z/group3!*
+Key/Secret      : aa11bb22
+Payload         : 
+Algo            : sha256
+Salt            : 
+Session ID      : 
+Field Delimiter : ~
+ACL Delimiter   : #
+Escape Early    : False
+Generating token...
+hdnts=exp=1370627963~acl=/z/group1!*#/z/group2!*#/z/group3!*~hmac=7c69f172ba4cc153cdeab614f5dd5491acb7efdbb14dbcc082c66ebc73c60877
+
+
